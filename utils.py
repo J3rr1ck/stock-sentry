@@ -18,8 +18,26 @@ def get_stock_data(symbol: str):
         # Get company info and financial data
         info = stock.info
 
-        # Get news data
-        news = stock.news
+        # Get and process news data
+        try:
+            news = stock.news
+            # Clean and validate news data
+            processed_news = []
+            for article in news:
+                if isinstance(article, dict):
+                    processed_article = {
+                        'title': article.get('title', ''),
+                        'publisher': article.get('publisher', 'Unknown'),
+                        'link': article.get('link', '#'),
+                        'providerPublishTime': article.get('providerPublishTime', 0),
+                        'summary': article.get('summary', '')
+                    }
+                    # Only include articles with actual content
+                    if processed_article['title'] and processed_article['summary']:
+                        processed_news.append(processed_article)
+        except Exception as e:
+            print(f"Error processing news: {str(e)}")
+            processed_news = []
 
         # Create metrics dictionary
         metrics = {
@@ -36,7 +54,7 @@ def get_stock_data(symbol: str):
         return {
             'metrics': metrics,
             'historical_data': hist_data,
-            'news': news,
+            'news': processed_news,
             'success': True
         }
     except Exception as e:

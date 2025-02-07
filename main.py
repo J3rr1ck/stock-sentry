@@ -57,19 +57,22 @@ if symbol:
                 st.subheader("📰 Latest News")
                 news_data = data['news']
 
-                for article in news_data[:5]:  # Display top 5 news articles
-                    with st.container():
-                        st.markdown(f"""
-                        <div class="news-card">
-                            <div class="news-title">{article.get('title', 'No Title')}</div>
-                            <div class="news-meta">
-                                {format_timestamp(article.get('providerPublishTime', 0))} | 
-                                Source: {article.get('publisher', 'Unknown')}
+                if news_data:
+                    for article in news_data[:5]:  # Display top 5 news articles
+                        with st.container():
+                            st.markdown(f"""
+                            <div class="news-card">
+                                <div class="news-title">{article['title']}</div>
+                                <div class="news-meta">
+                                    {format_timestamp(article['providerPublishTime'])} | 
+                                    Source: {article['publisher']}
+                                </div>
+                                <div class="news-summary">{article['summary']}</div>
+                                <a href="{article['link']}" target="_blank">Read more</a>
                             </div>
-                            <div class="news-summary">{article.get('summary', 'No summary available')}</div>
-                            <a href="{article.get('link', '#')}" target="_blank">Read more</a>
-                        </div>
-                        """, unsafe_allow_html=True)
+                            """, unsafe_allow_html=True)
+                else:
+                    st.info("No recent news articles available for this stock.")
 
             with col2:
                 # Display metrics in a table
