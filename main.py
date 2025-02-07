@@ -1,6 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
-from utils import get_stock_data, format_large_number, format_timestamp
+from utils import get_stock_data, format_large_number, format_timestamp, generate_stock_insight_card
 from styles import STYLES
 import pandas as pd
 
@@ -31,7 +31,7 @@ if symbols_input:
     if len(symbols) > 0:
         with st.spinner('Fetching stock data...'):
             # Create tabs for different views
-            tab1, tab2 = st.tabs(["📊 Price Comparison", "📰 News Feed"])
+            tab1, tab2, tab3 = st.tabs(["📊 Price Comparison", "📰 News Feed", "🔍 Insight Cards"])
 
             with tab1:
                 # Initialize the comparison chart
@@ -108,6 +108,28 @@ if symbols_input:
                                     """, unsafe_allow_html=True)
                         else:
                             st.info(f"No recent news articles available for {symbol}")
+
+            with tab3:
+                st.subheader("📊 Stock Insight Cards")
+                st.markdown("Generate and share insights for your selected stocks.")
+
+                # Generate insight cards for each stock
+                for symbol in symbols:
+                    if symbol in comparison_data:
+                        data = comparison_data[symbol]
+                        card_html = generate_stock_insight_card(symbol, data)
+                        st.markdown(card_html, unsafe_allow_html=True)
+
+                        # Add share button (downloads the card as HTML)
+                        card_filename = f"{symbol}_insight_card.html"
+                        st.download_button(
+                            label=f"Share {symbol} Insight Card",
+                            data=card_html,
+                            file_name=card_filename,
+                            mime="text/html",
+                            key=f"share_{symbol}",
+                            help="Download this insight card to share with others"
+                        )
 
                 # Download button for CSV
                 st.subheader("Download Data")

@@ -50,5 +50,85 @@ STYLES = """
     font-size: 0.9rem;
     color: #333;
 }
+
+/* Stock Insight Card Styles */
+.insight-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.card-header h2 {
+    margin: 0;
+    color: #1f77b4;
+    font-size: 1.5rem;
+}
+
+.price-change {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.card-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.metric .label {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.metric .value {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.card-footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    text-align: right;
+}
+
+.card-footer .timestamp {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+.share-button {
+    background-color: #1f77b4;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    margin-top: 0.5rem;
+}
+
+.share-button:hover {
+    background-color: #145c8e;
+}
 </style>
 """

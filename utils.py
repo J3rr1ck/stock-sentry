@@ -25,7 +25,6 @@ def get_stock_data(symbol: str):
             processed_news = []
             for article in news:
                 if isinstance(article, dict):
-                    # Extract content from nested structure if it exists
                     content = article.get('content', article)
                     processed_article = {
                         'title': content.get('title', ''),
@@ -34,14 +33,12 @@ def get_stock_data(symbol: str):
                         'providerPublishTime': content.get('pubDate', ''),
                         'summary': content.get('summary', '')
                     }
-                    # Only include articles with actual content
                     if processed_article['title'] and processed_article['summary']:
                         processed_news.append(processed_article)
 
-            # Debug print
             print(f"Found {len(processed_news)} news articles for {symbol}")
             if not processed_news:
-                print(f"Raw news data for {symbol}: {news[:2]}")  # Print first 2 articles for debugging
+                print(f"Raw news data for {symbol}: {news[:2]}")
         except Exception as e:
             print(f"Error processing news: {str(e)}")
             processed_news = []
@@ -58,10 +55,19 @@ def get_stock_data(symbol: str):
             'Dividend Yield': info.get('dividendYield', 'N/A')
         }
 
+        # Calculate price change percentage
+        if not hist_data.empty:
+            current_price = hist_data['Close'].iloc[-1]
+            start_price = hist_data['Close'].iloc[0]
+            price_change = ((current_price - start_price) / start_price) * 100
+        else:
+            price_change = 0
+
         return {
             'metrics': metrics,
             'historical_data': hist_data,
             'news': processed_news,
+            'price_change': price_change,
             'success': True
         }
     except Exception as e:
@@ -93,10 +99,46 @@ def format_timestamp(timestamp):
     """
     try:
         if isinstance(timestamp, str):
-            # Parse ISO format date string
             dt = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%SZ')
         else:
             dt = datetime.fromtimestamp(timestamp)
         return dt.strftime('%Y-%m-%d %H:%M')
     except:
         return 'N/A'
+
+def generate_stock_insight_card(symbol: str, data: dict) -> str:
+    """
+    Generate HTML for a shareable stock insight card
+    """
+    metrics = data['metrics']
+    price_change = data['price_change']
+    change_color = 'green' if price_change >= 0 else 'red'
+
+    card_html = f"""
+    <div class="insight-card">
+        <div class="card-header">
+            <h2>{symbol}</h2>
+            <span class="price-change" style="color: {change_color}">
+                {price_change:+.2f}%
+            </span>
+        </div>
+        <div class="card-metrics">
+            <div class="metric">
+                <span class="label">Current Price</span>
+                <span class="value">{format_large_number(metrics['Current Price'])}</span>
+            </div>
+            <div class="metric">
+                <span class="label">Market Cap</span>
+                <span class="value">{format_large_number(metrics['Market Cap'])}</span>
+            </div>
+            <div class="metric">
+                <span class="label">P/E Ratio</span>
+                <span class="value">{metrics['PE Ratio']}</span>
+            </div>
+        </div>
+        <div class="card-footer">
+            <span class="timestamp">Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}</span>
+        </div>
+    </div>
+    """
+    return card_html
