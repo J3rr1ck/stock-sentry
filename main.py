@@ -6,7 +6,7 @@ import pandas as pd
 
 # Page configuration
 st.set_page_config(
-    page_title="Stock Data Visualization",
+    page_title="Stock Dash",
     page_icon="📈",
     layout="wide"
 )
@@ -35,7 +35,7 @@ if symbols_input:
     if len(symbols) > 0:
         with st.spinner('Fetching stock data...'):
             # Create tabs for different views
-            tab1, tab2, tab3, tab4 = st.tabs(["📊 Price Comparison", "📰 News Feed", "🔍 Insight Cards", "🤖 AI Chat"])
+            tab1, tab2, tab3, = st.tabs(["📊 Price Comparison", "📰 News Feed", "🤖 AI Chat"])
 
             # Initialize the comparison chart
             fig = go.Figure()
@@ -114,18 +114,8 @@ if symbols_input:
                         else:
                             st.info(f"No recent news articles available for {symbol}")
 
+            
             with tab3:
-                st.subheader("📊 Stock Insight Cards")
-                st.markdown("View detailed insights for your selected stocks.")
-
-                # Generate insight cards for each stock
-                for symbol in symbols:
-                    if symbol in comparison_data:
-                        data = comparison_data[symbol]
-                        card_html = generate_stock_insight_card(symbol, data)
-                        st.markdown(card_html, unsafe_allow_html=True)
-
-            with tab4:
                 st.subheader("🤖 Chat with AI about Stocks")
                 st.markdown("Ask questions about the stocks you're viewing and get AI-powered insights.")
 
