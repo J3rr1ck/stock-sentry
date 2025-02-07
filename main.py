@@ -1,6 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
-from utils import get_stock_data, format_large_number, format_timestamp, generate_stock_insight_card
+from utils import get_stock_data, format_large_number, format_timestamp, generate_stock_insight_card, init_gemini, get_ai_insights
 from styles import STYLES
 import pandas as pd
 
@@ -13,6 +13,10 @@ st.set_page_config(
 
 # Apply custom styles
 st.markdown(STYLES, unsafe_allow_html=True)
+
+# Initialize session state
+if 'ai_chat_history' not in st.session_state:
+    st.session_state.ai_chat_history = []
 
 # Title and description
 st.title("📈 Stock Data Visualization")
@@ -31,31 +35,32 @@ if symbols_input:
     if len(symbols) > 0:
         with st.spinner('Fetching stock data...'):
             # Create tabs for different views
-            tab1, tab2, tab3 = st.tabs(["📊 Price Comparison", "📰 News Feed", "🔍 Insight Cards"])
+            tab1, tab2, tab3, tab4 = st.tabs(["📊 Price Comparison", "📰 News Feed", "🔍 Insight Cards", "🤖 AI Chat"])
+
+            # Initialize the comparison chart
+            fig = go.Figure()
+            comparison_data = {}
+
+            # Fetch data for each symbol
+            for symbol in symbols:
+                data = get_stock_data(symbol)
+                if data['success']:
+                    data['symbol'] = symbol  # Add symbol to data for AI context
+                    comparison_data[symbol] = data
+                    hist_data = data['historical_data']
+
+                    # Normalize prices to percentage change
+                    first_close = hist_data['Close'].iloc[0]
+                    normalized_prices = ((hist_data['Close'] - first_close) / first_close) * 100
+
+                    fig.add_trace(go.Scatter(
+                        x=hist_data.index,
+                        y=normalized_prices,
+                        name=symbol,
+                        mode='lines'
+                    ))
 
             with tab1:
-                # Initialize the comparison chart
-                fig = go.Figure()
-                comparison_data = {}
-
-                # Fetch data for each symbol
-                for symbol in symbols:
-                    data = get_stock_data(symbol)
-                    if data['success']:
-                        comparison_data[symbol] = data
-                        hist_data = data['historical_data']
-
-                        # Normalize prices to percentage change
-                        first_close = hist_data['Close'].iloc[0]
-                        normalized_prices = ((hist_data['Close'] - first_close) / first_close) * 100
-
-                        fig.add_trace(go.Scatter(
-                            x=hist_data.index,
-                            y=normalized_prices,
-                            name=symbol,
-                            mode='lines'
-                        ))
-
                 fig.update_layout(
                     title='Stock Price Comparison (% Change)',
                     yaxis_title='Price Change (%)',
@@ -111,7 +116,7 @@ if symbols_input:
 
             with tab3:
                 st.subheader("📊 Stock Insight Cards")
-                st.markdown("Generate and share insights for your selected stocks.")
+                st.markdown("View detailed insights for your selected stocks.")
 
                 # Generate insight cards for each stock
                 for symbol in symbols:
@@ -120,28 +125,46 @@ if symbols_input:
                         card_html = generate_stock_insight_card(symbol, data)
                         st.markdown(card_html, unsafe_allow_html=True)
 
-                        # Add share button (downloads the card as HTML)
-                        card_filename = f"{symbol}_insight_card.html"
-                        st.download_button(
-                            label=f"Share {symbol} Insight Card",
-                            data=card_html,
-                            file_name=card_filename,
-                            mime="text/html",
-                            key=f"share_{symbol}",
-                            help="Download this insight card to share with others"
-                        )
+            with tab4:
+                st.subheader("🤖 Chat with AI about Stocks")
+                st.markdown("Ask questions about the stocks you're viewing and get AI-powered insights.")
 
-                # Download button for CSV
-                st.subheader("Download Data")
-                for symbol, data in comparison_data.items():
-                    csv_data = data['historical_data'].reset_index()
-                    csv = csv_data.to_csv(index=False)
-                    st.download_button(
-                        label=f"Download {symbol} Historical Data (CSV)",
-                        data=csv,
-                        file_name=f"{symbol}_historical_data.csv",
-                        mime="text/csv",
-                    )
+                # Initialize Gemini AI
+                try:
+                    model = init_gemini()
+
+                    # Chat interface
+                    user_question = st.text_input("Ask a question about the stocks:", key="ai_question")
+
+                    if user_question:
+                        # Process each stock's data with AI
+                        for symbol, data in comparison_data.items():
+                            st.markdown(f"### Analysis for {symbol}")
+                            with st.spinner(f"Generating insights for {symbol}..."):
+                                ai_response = get_ai_insights(model, data, user_question)
+                                st.markdown(f'<div class="ai-response">{ai_response}</div>', unsafe_allow_html=True)
+
+                                # Store in chat history
+                                st.session_state.ai_chat_history.append({
+                                    'question': user_question,
+                                    'symbol': symbol,
+                                    'response': ai_response
+                                })
+
+                    # Display chat history
+                    if st.session_state.ai_chat_history:
+                        st.markdown("### Previous Questions")
+                        for entry in st.session_state.ai_chat_history[-5:]:  # Show last 5 exchanges
+                            st.markdown(f"**Q**: {entry['question']}")
+                            st.markdown(f"**{entry['symbol']}**: {entry['response']}")
+                            st.markdown("---")
+
+                except ValueError as e:
+                    st.error("Please set up your Gemini API key to use the AI chat feature.")
+
+                except Exception as e:
+                    st.error(f"An error occurred with the AI chat: {str(e)}")
+
     else:
         st.warning("Please enter at least one valid stock symbol.")
 else:

@@ -117,43 +117,21 @@ STYLES = """
     color: #999;
 }
 
-/* Social Share Buttons */
-.social-share-buttons {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-    justify-content: center;
+/* AI Chat Styles */
+.ai-chat-container {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.share-button {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    text-decoration: none;
-    font-weight: 500;
-    transition: background-color 0.2s;
-}
-
-.share-button.twitter {
-    background-color: #1DA1F2;
-    color: white;
-}
-
-.share-button.facebook {
-    background-color: #4267B2;
-    color: white;
-}
-
-.share-button.linkedin {
-    background-color: #0077b5;
-    color: white;
-}
-
-.share-button:hover {
-    opacity: 0.9;
+.ai-response {
+    background: #f8f9fa;
+    border-left: 4px solid #1f77b4;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 0 4px 4px 0;
 }
 </style>
 """

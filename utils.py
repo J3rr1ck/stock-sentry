@@ -1,6 +1,8 @@
 import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
+import google.generativeai as genai
+import os
 
 def get_stock_data(symbol: str):
     """
@@ -21,7 +23,6 @@ def get_stock_data(symbol: str):
         # Get and process news data
         try:
             news = stock.news
-            # Clean and validate news data
             processed_news = []
             for article in news:
                 if isinstance(article, dict):
@@ -108,22 +109,11 @@ def format_timestamp(timestamp):
 
 def generate_stock_insight_card(symbol: str, data: dict) -> str:
     """
-    Generate HTML for a shareable stock insight card with social media sharing
+    Generate HTML for a stock insight card
     """
     metrics = data['metrics']
     price_change = data['price_change']
     change_color = 'green' if price_change >= 0 else 'red'
-
-    # Create share text with hashtags and better formatting
-    share_text = f"📈 ${symbol} Stock Update:\n• {price_change:+.2f}% change\n• Price: {format_large_number(metrics['Current Price'])}\n• Market Cap: {format_large_number(metrics['Market Cap'])}\n#stocks #investing #finance"
-
-    # Properly encode the share text for URLs
-    encoded_text = share_text.replace('\n', '%0A').replace(' ', '%20').replace('#', '%23')
-
-    # Generate social media share URLs with proper parameters
-    twitter_url = f"https://twitter.com/intent/tweet?text={encoded_text}"
-    facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={encoded_text}"
-    linkedin_url = f"https://www.linkedin.com/sharing/share-offsite/?text={encoded_text}"
 
     card_html = f"""
     <div class="insight-card">
@@ -147,20 +137,58 @@ def generate_stock_insight_card(symbol: str, data: dict) -> str:
                 <span class="value">{metrics['PE Ratio']}</span>
             </div>
         </div>
-        <div class="social-share-buttons">
-            <a href="{twitter_url}" target="_blank" class="share-button twitter">
-                Share on X (Twitter)
-            </a>
-            <a href="{facebook_url}" target="_blank" class="share-button facebook">
-                Share on Facebook
-            </a>
-            <a href="{linkedin_url}" target="_blank" class="share-button linkedin">
-                Share on LinkedIn
-            </a>
-        </div>
         <div class="card-footer">
             <span class="timestamp">Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}</span>
         </div>
     </div>
     """
     return card_html
+
+def init_gemini():
+    """
+    Initialize Gemini AI
+    """
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY environment variable is not set")
+
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-pro')
+    return model
+
+def get_ai_insights(model, stock_data, question):
+    """
+    Get AI insights about the stock data
+    """
+    try:
+        # Prepare context about the stock
+        symbol = stock_data.get('symbol', 'Unknown')
+        metrics = stock_data.get('metrics', {})
+        price_change = stock_data.get('price_change', 0)
+        news = stock_data.get('news', [])
+
+        context = f"""
+        Stock: {symbol}
+        Price Change: {price_change:+.2f}%
+        Current Price: {format_large_number(metrics.get('Current Price', 'N/A'))}
+        Market Cap: {format_large_number(metrics.get('Market Cap', 'N/A'))}
+        P/E Ratio: {metrics.get('PE Ratio', 'N/A')}
+        Volume: {format_large_number(metrics.get('Volume', 'N/A'))}
+
+        Recent News Headlines:
+        {' '.join([f"- {article['title']}" for article in news[:3]])}
+        """
+
+        # Generate response
+        prompt = f"""Based on this stock data:
+        {context}
+
+        Question: {question}
+
+        Please provide a clear and concise analysis."""
+
+        response = model.generate_content(prompt)
+        return response.text
+
+    except Exception as e:
+        return f"Error generating AI insights: {str(e)}"
