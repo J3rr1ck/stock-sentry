@@ -148,7 +148,7 @@ def init_gemini():
     """
     Initialize Gemini AI
     """
-    api_key = os.getenv('GEMINI_API_KEY')
+    api_key = 'AIzaSyCdp6Bb7K8HqlQEypSYC4fcAtF6jc27wUU'
     if not api_key:
         raise ValueError("GEMINI_API_KEY environment variable is not set")
 
@@ -156,32 +156,14 @@ def init_gemini():
     model = genai.GenerativeModel('gemini-pro')
     return model
 
-def get_ai_insights(model, stock_data, question):
+def get_ai_insights(model, combined_context, question):
     """
     Get AI insights about the stock data
     """
     try:
-        # Prepare context about the stock
-        symbol = stock_data.get('symbol', 'Unknown')
-        metrics = stock_data.get('metrics', {})
-        price_change = stock_data.get('price_change', 0)
-        news = stock_data.get('news', [])
-
-        context = f"""
-        Stock: {symbol}
-        Price Change: {price_change:+.2f}%
-        Current Price: {format_large_number(metrics.get('Current Price', 'N/A'))}
-        Market Cap: {format_large_number(metrics.get('Market Cap', 'N/A'))}
-        P/E Ratio: {metrics.get('PE Ratio', 'N/A')}
-        Volume: {format_large_number(metrics.get('Volume', 'N/A'))}
-
-        Recent News Headlines:
-        {' '.join([f"- {article['title']}" for article in news[:3]])}
-        """
-
         # Generate response
         prompt = f"""Based on this stock data:
-        {context}
+        {combined_context}
 
         Question: {question}
 

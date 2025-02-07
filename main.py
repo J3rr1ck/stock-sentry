@@ -137,26 +137,41 @@ if symbols_input:
                     user_question = st.text_input("Ask a question about the stocks:", key="ai_question")
 
                     if user_question:
-                        # Process each stock's data with AI
+                        # Prepare combined context for all stocks
+                        combined_context = ""
                         for symbol, data in comparison_data.items():
-                            st.markdown(f"### Analysis for {symbol}")
-                            with st.spinner(f"Generating insights for {symbol}..."):
-                                ai_response = get_ai_insights(model, data, user_question)
-                                st.markdown(f'<div class="ai-response">{ai_response}</div>', unsafe_allow_html=True)
+                            if isinstance(data, dict):  # Ensure data is a dictionary
+                                metrics = data.get('metrics', {})
+                                price_change = data.get('price_change', 0)
+                                combined_context += f"""
+                                Stock: {symbol}
+                                Price Change: {price_change:+.2f}%
+                                Current Price: {format_large_number(metrics.get('Current Price', 'N/A'))}
+                                Market Cap: {format_large_number(metrics.get('Market Cap', 'N/A'))}
+                                P/E Ratio: {metrics.get('PE Ratio', 'N/A')}
+                                Volume: {format_large_number(metrics.get('Volume', 'N/A'))}
+                                Recent News Headlines: {', '.join([article['title'] for article in data.get('news', [])[:3]])}
+                                \n
+                                """
 
-                                # Store in chat history
-                                st.session_state.ai_chat_history.append({
-                                    'question': user_question,
-                                    'symbol': symbol,
-                                    'response': ai_response
-                                })
+                        # Generate AI insights based on combined context
+                        st.markdown("### Analysis for All Stocks")
+                        with st.spinner("Generating insights..."):
+                            ai_response = get_ai_insights(model, combined_context, user_question)
+                            st.markdown(f'<div class="ai-response">{ai_response}</div>', unsafe_allow_html=True)
+
+                            # Store in chat history
+                            st.session_state.ai_chat_history.append({
+                                'question': user_question,
+                                'response': ai_response
+                            })
 
                     # Display chat history
                     if st.session_state.ai_chat_history:
                         st.markdown("### Previous Questions")
                         for entry in st.session_state.ai_chat_history[-5:]:  # Show last 5 exchanges
                             st.markdown(f"**Q**: {entry['question']}")
-                            st.markdown(f"**{entry['symbol']}**: {entry['response']}")
+                            st.markdown(f"**AI Response**: {entry['response']}")
                             st.markdown("---")
 
                 except ValueError as e:

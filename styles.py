@@ -126,11 +126,12 @@ STYLES = """
 }
 
 .ai-response {
-    background: #f8f9fa;
+    background: #333;
     border-left: 4px solid #1f77b4;
     padding: 1rem;
     margin: 1rem 0;
     border-radius: 0 4px 4px 0;
+    color: #eee;
 }
 </style>
 """
