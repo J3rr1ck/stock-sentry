@@ -114,14 +114,16 @@ def generate_stock_insight_card(symbol: str, data: dict) -> str:
     price_change = data['price_change']
     change_color = 'green' if price_change >= 0 else 'red'
 
-    # Create share text
-    share_text = f"Check out {symbol} stock insights: {price_change:+.2f}% change | Current Price: {format_large_number(metrics['Current Price'])} | Market Cap: {format_large_number(metrics['Market Cap'])}"
-    encoded_text = share_text.replace(' ', '%20')
+    # Create share text with hashtags and better formatting
+    share_text = f"📈 ${symbol} Stock Update:\n• {price_change:+.2f}% change\n• Price: {format_large_number(metrics['Current Price'])}\n• Market Cap: {format_large_number(metrics['Market Cap'])}\n#stocks #investing #finance"
 
-    # Generate social media share URLs
+    # Properly encode the share text for URLs
+    encoded_text = share_text.replace('\n', '%0A').replace(' ', '%20').replace('#', '%23')
+
+    # Generate social media share URLs with proper parameters
     twitter_url = f"https://twitter.com/intent/tweet?text={encoded_text}"
-    facebook_url = f"https://www.facebook.com/sharer/sharer.php?u=&quote={encoded_text}"
-    linkedin_url = f"https://www.linkedin.com/sharing/share-offsite/?url=&title={encoded_text}"
+    facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={encoded_text}"
+    linkedin_url = f"https://www.linkedin.com/sharing/share-offsite/?text={encoded_text}"
 
     card_html = f"""
     <div class="insight-card">
