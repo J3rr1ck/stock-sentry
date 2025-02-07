@@ -119,7 +119,6 @@ STYLES = """
 
 /* AI Chat Styles */
 .ai-chat-container {
-    background: white;
     border-radius: 8px;
     padding: 1rem;
     margin: 1rem 0;
