@@ -108,11 +108,20 @@ def format_timestamp(timestamp):
 
 def generate_stock_insight_card(symbol: str, data: dict) -> str:
     """
-    Generate HTML for a shareable stock insight card
+    Generate HTML for a shareable stock insight card with social media sharing
     """
     metrics = data['metrics']
     price_change = data['price_change']
     change_color = 'green' if price_change >= 0 else 'red'
+
+    # Create share text
+    share_text = f"Check out {symbol} stock insights: {price_change:+.2f}% change | Current Price: {format_large_number(metrics['Current Price'])} | Market Cap: {format_large_number(metrics['Market Cap'])}"
+    encoded_text = share_text.replace(' ', '%20')
+
+    # Generate social media share URLs
+    twitter_url = f"https://twitter.com/intent/tweet?text={encoded_text}"
+    facebook_url = f"https://www.facebook.com/sharer/sharer.php?u=&quote={encoded_text}"
+    linkedin_url = f"https://www.linkedin.com/sharing/share-offsite/?url=&title={encoded_text}"
 
     card_html = f"""
     <div class="insight-card">
@@ -135,6 +144,17 @@ def generate_stock_insight_card(symbol: str, data: dict) -> str:
                 <span class="label">P/E Ratio</span>
                 <span class="value">{metrics['PE Ratio']}</span>
             </div>
+        </div>
+        <div class="social-share-buttons">
+            <a href="{twitter_url}" target="_blank" class="share-button twitter">
+                Share on X (Twitter)
+            </a>
+            <a href="{facebook_url}" target="_blank" class="share-button facebook">
+                Share on Facebook
+            </a>
+            <a href="{linkedin_url}" target="_blank" class="share-button linkedin">
+                Share on LinkedIn
+            </a>
         </div>
         <div class="card-footer">
             <span class="timestamp">Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}</span>
