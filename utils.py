@@ -35,6 +35,11 @@ def get_stock_data(symbol: str):
                     # Only include articles with actual content
                     if processed_article['title'] and processed_article['summary']:
                         processed_news.append(processed_article)
+
+            # Debug print
+            print(f"Found {len(processed_news)} news articles for {symbol}")
+            if not processed_news:
+                print(f"Raw news data for {symbol}: {news[:2]}")  # Print first 2 articles for debugging
         except Exception as e:
             print(f"Error processing news: {str(e)}")
             processed_news = []
@@ -58,6 +63,7 @@ def get_stock_data(symbol: str):
             'success': True
         }
     except Exception as e:
+        print(f"Error fetching data for {symbol}: {str(e)}")
         return {
             'success': False,
             'error': str(e)
