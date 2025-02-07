@@ -25,12 +25,14 @@ def get_stock_data(symbol: str):
             processed_news = []
             for article in news:
                 if isinstance(article, dict):
+                    # Extract content from nested structure if it exists
+                    content = article.get('content', article)
                     processed_article = {
-                        'title': article.get('title', ''),
-                        'publisher': article.get('publisher', 'Unknown'),
-                        'link': article.get('link', '#'),
-                        'providerPublishTime': article.get('providerPublishTime', 0),
-                        'summary': article.get('summary', '')
+                        'title': content.get('title', ''),
+                        'publisher': content.get('provider', {}).get('displayName', 'Unknown'),
+                        'link': content.get('canonicalUrl', {}).get('url', '#'),
+                        'providerPublishTime': content.get('pubDate', ''),
+                        'summary': content.get('summary', '')
                     }
                     # Only include articles with actual content
                     if processed_article['title'] and processed_article['summary']:
@@ -90,7 +92,11 @@ def format_timestamp(timestamp):
     Format Unix timestamp to readable date
     """
     try:
-        dt = datetime.fromtimestamp(timestamp)
+        if isinstance(timestamp, str):
+            # Parse ISO format date string
+            dt = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%SZ')
+        else:
+            dt = datetime.fromtimestamp(timestamp)
         return dt.strftime('%Y-%m-%d %H:%M')
     except:
         return 'N/A'
